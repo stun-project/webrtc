@@ -12,6 +12,7 @@ function App() {
   const connect = (name) => {
     setConnecting(true);
     setName(name);
+    console.log(name);
   };
 
 

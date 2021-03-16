@@ -13,7 +13,7 @@ function Landing(props) {
     <div className="landing">
         <h2>Enter your display name</h2>
         <input type="text" value={name} onChange = {(evt) => handleChange(evt)} ></input>
-        <button onClick={(name) => props.connect(name)}>Connect!</button>
+        <button onClick={() => props.connect(name)}>Connect!</button>
     </div>
   );
 }
