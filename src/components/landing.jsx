@@ -11,7 +11,8 @@ function Landing(props) {
 
   return (
     <div className="landing">
-        <h2>Enter your display name</h2>
+        <p>Here you can chat with strangers or friends!</p>
+        <h2>Enter your display name to get started</h2>
         <input type="text" value={name} onChange = {(evt) => handleChange(evt)} ></input>
         <button onClick={() => props.connect(name)}>Connect!</button>
     </div>

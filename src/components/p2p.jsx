@@ -135,7 +135,7 @@ function P2p(props) {
             console.log(peerConnection.iceConnectionState);
             if (peerConnection.iceConnectionState === 'connected') {
                 setConnected(true);
-                console.log("Sigmund er kul")
+                socket.emit("disconnect");
             }
         });
 
@@ -189,7 +189,9 @@ function P2p(props) {
         <div className="p2p">
             {renderUserVideo()}
             {renderPartnerVideo()}
-            {renderPeers()}
+            <aside>
+                {renderPeers()}
+            </aside>
         </div>
     );
 }
