@@ -26,15 +26,24 @@ function Landing(props) {
     return res;
   }
 
-  function joinRoom(){
-    if(scoutRoom(joinRoomId)){
+  async function joinRoom(){
+    let roomExists = await scoutRoom(makeRoomId) 
+    if(!roomExists){
       props.history.push("/rooms/" + joinRoomId);
+    }
+    else{
+      setJoinRoomId("No such room exists")
     }
   }
   
   async function makeRoom(){
-    if(!(await scoutRoom(makeRoomId))){
+    let roomExists = await scoutRoom(makeRoomId) 
+    if(!roomExists){
+      socket.emit("createRoom", makeRoomId)
       props.history.push("/rooms/" + makeRoomId);
+    }
+    else{
+      setMakeRoomId("Room already exists with that name")
     }
   }
 
