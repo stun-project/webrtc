@@ -13,9 +13,13 @@ function Room(props) {
     
 
     useEffect(() => {
-        initializeSocket();
-        initializeVideo();
+        initialize();
     },[]);
+
+    async function initialize(){
+        await initializeVideo();
+        initializeSocket();
+    }
 
     const initializeSocket = () => {
 
@@ -27,12 +31,14 @@ function Room(props) {
         });
         socket.on("joinedRoom", (peersConnected) => {
             setPeers(peersConnected);
-            for(const peerID of Object.values(peers)){
-                console.log(peersConnected)
-                makeCall(peerID)
-            }
+            console.log(peersConnected);
+            peersConnected.forEach( (peerID) => {
+                console.log(peerID);
+                makeCall(peerID);
+            })
         });
         socket.on("offer", async (message) => {
+            console.log("motatt offer");
             await receiveCall(message);
         });
 
@@ -55,7 +61,7 @@ function Room(props) {
         });        
     };
 
-    const initializeVideo = () => {
+    const initializeVideo = async () => {
         const constraints = {
             'video': {
                 "width":500,
@@ -64,13 +70,13 @@ function Room(props) {
             'audio': true
         }
 
-        navigator.mediaDevices.getUserMedia(constraints)
+        await navigator.mediaDevices.getDisplayMedia(constraints)
             .then(stream => {
                 videoStream.current = stream;
                 let video = videoRef.current;
                 video.srcObject = stream;
                 
-            })
+            }).then()
             .catch(error => {
                 console.error('Error accessing media devices.', error);
         });
@@ -88,9 +94,11 @@ function Room(props) {
 
     const renderPartnerVideo = () => {
         let renderedvids = [];
-        for(const peerStream of Object.values(partnerVideos.current)){
+        
+        for(const peerStream in partnerVideos){
+   
             renderedvids.push(
-                <video autoPlay={true} ref={peerStream} muted>
+                <video autoPlay={true} ref={ ref => {partnerVideos.current[peerStream] = ref}} muted>
                 Your browser does not support the video tag.
                 </video>
             ); 
@@ -117,6 +125,7 @@ function Room(props) {
         const offer = await peerRef.current[peerId].createOffer();
         await peerRef.current[peerId].setLocalDescription(offer);
         socket.emit('offer',{"id":peerId, "senderId":id, "offer":offer});
+        console.log("etter offer");
     }
 
     const initializePeerConnection = (peerId) => {
@@ -124,12 +133,14 @@ function Room(props) {
         const peerConnection = new RTCPeerConnection(configuration);
 
         peerConnection.addEventListener('track', async (event) => {
-            partnerVideos.current[peerId].srcObject = event.streams[0]
+            console.log(partnerVideos);
+            partnerVideos.current[peerId] = event.streams[0];
+            console.log(partnerVideos);
         }); 
 
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
-                socket.emit('candidate', {'id': peerId, 'candidate': event.candidate});
+                socket.emit('candidate', {'id': peerId, "senderId":id, 'candidate': event.candidate});
             }
         };
         return peerConnection;
