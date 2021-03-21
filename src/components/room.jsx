@@ -1,7 +1,6 @@
 import './room.css';
 import {useState, useEffect, useRef} from 'react';
-import { io } from "socket.io-client";
-const socket = io("localhost:8000/");
+import {socket} from "../socket";
 
 
 function Room(props) {
@@ -19,6 +18,7 @@ function Room(props) {
     },[]);
 
     const initializeSocket = () => {
+
         const roomId = window.location.href.toString().split("/")[window.location.href.toString().split("/").length-1];
         socket.emit("my_name_is");
         socket.emit("joinRoom", roomId);
@@ -52,13 +52,7 @@ function Room(props) {
                 const remoteDesc = new RTCSessionDescription(message.answer);
                 await peerRef.current[message.senderId].setRemoteDescription(remoteDesc);
             }
-        });
-        window.addEventListener("beforeunload", (ev) => 
-        {  
-            ev.preventDefault();
-            socket.emit("leaveRoom", roomId)
-        });
-        
+        });        
     };
 
     const initializeVideo = () => {

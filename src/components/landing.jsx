@@ -1,7 +1,6 @@
 import './landing.css';
 import {useState} from 'react';
-import { io } from "socket.io-client";
-const socket = io("localhost:8000/");
+import {socket} from "../socket";
 
 
 function Landing(props) {
