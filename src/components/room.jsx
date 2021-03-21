@@ -1,14 +1,14 @@
 import './room.css';
 import {useState, useEffect, useRef} from 'react';
 import {socket} from "../socket";
+import Partner from "./partner";
 
 
 function Room(props) {
-    const [id, setId] = useState("");
-    const [peers, setPeers] = useState({});
-    const peerRef = useRef({});
+    let id = "";
+    const [peerConnections,setPeerConnections] = useState({});
+    const [reRenderNumb, setRerenderNumb] = useState(0);
     const videoRef = useRef();
-    const partnerVideos = useRef({});
     const videoStream = useRef();
     
 
@@ -16,7 +16,7 @@ function Room(props) {
         initialize();
     },[]);
 
-    async function initialize(){
+    const initialize = async () => {
         await initializeVideo();
         initializeSocket();
     }
@@ -27,10 +27,10 @@ function Room(props) {
         socket.emit("my_name_is");
         socket.emit("joinRoom", roomId);
         socket.on("you", (myId) => {
-            setId(myId);
+            id = myId;
+            console.log(id);
         });
         socket.on("joinedRoom", (peersConnected) => {
-            setPeers(peersConnected);
             console.log(peersConnected);
             peersConnected.forEach( (peerID) => {
                 console.log(peerID);
@@ -40,12 +40,13 @@ function Room(props) {
         socket.on("offer", async (message) => {
             console.log("motatt offer");
             await receiveCall(message);
+            
         });
 
         socket.on('candidate', async (message) => { 
             if (message.candidate) {
                 try {
-                    await peerRef.current[message.senderId].addIceCandidate(message.candidate);
+                    await peerConnections[message.senderId].addIceCandidate(message.candidate);
                 } catch (e) {
                     console.error('Error adding received ice candidate', e);
                 }
@@ -53,11 +54,13 @@ function Room(props) {
         });
 
         socket.on('answer', async message => {
+            console.log("før if i ans")
             if (message.answer) {
-                console.log("ans")
+                console.log(message)
                 const remoteDesc = new RTCSessionDescription(message.answer);
-                await peerRef.current[message.senderId].setRemoteDescription(remoteDesc);
+                await peerConnections[message.senderId].setRemoteDescription(remoteDesc);
             }
+            
         });        
     };
 
@@ -94,22 +97,27 @@ function Room(props) {
 
     const renderPartnerVideo = () => {
         let renderedvids = [];
+        console.log("runner denne flere ganger???");
+        // for(const peerConnection in peerConnections){
+        //     console.log(peerConnections);
+        //     renderedvids.push(
+        //         <Partner key={peerConnection} peerConnection={peerConnections[peerConnection]} reRenderNumb={reRenderNumb}></Partner>
+        //     ); 
+        // }
+
         
-        for(const peerStream in partnerVideos){
-   
-            renderedvids.push(
-                <video autoPlay={true} ref={ ref => {partnerVideos.current[peerStream] = ref}} muted>
-                Your browser does not support the video tag.
-                </video>
-            ); 
-        }
         return renderedvids;
     };
 
-    async function makeCall(peerId) {
-        peerRef.current[peerId] = initializePeerConnection(peerId);
+    const makeCall = async (peerId) => {
+        const peerConnection =  initializePeerConnection(peerId);
+        const  tempPeerConections = peerConnections
+        tempPeerConections[peerId] = peerConnection;
+        setPeerConnections(tempPeerConections);
+        setRerenderNumb(reRenderNumb+1);
+
         videoStream.current.getTracks().forEach(track => {
-            peerRef.current[peerId].addTrack(track, videoStream.current);
+            peerConnections[peerId].addTrack(track, videoStream.current);
         });
 
 
@@ -122,60 +130,48 @@ function Room(props) {
         };
         chatChannel.onclose = () => console.log('onclose');*/
 
-        const offer = await peerRef.current[peerId].createOffer();
-        await peerRef.current[peerId].setLocalDescription(offer);
+        const offer = await peerConnections[peerId].createOffer();
+        await peerConnections[peerId].setLocalDescription(offer);
         socket.emit('offer',{"id":peerId, "senderId":id, "offer":offer});
-        console.log("etter offer");
     }
 
     const initializePeerConnection = (peerId) => {
         const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
         const peerConnection = new RTCPeerConnection(configuration);
 
-        peerConnection.addEventListener('track', async (event) => {
-            console.log(partnerVideos);
-            partnerVideos.current[peerId] = event.streams[0];
-            console.log(partnerVideos);
-        }); 
+        // peerConnection.addEventListener('track', async (event) => {
+        //     console.log(partnerVideos);
+        //     partnerVideos.current[peerId] = event.streams[0];
+        //     console.log(partnerVideos);
+        // }); 
 
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
                 socket.emit('candidate', {'id': peerId, "senderId":id, 'candidate': event.candidate});
             }
         };
+
         return peerConnection;
     }
     
 
     const receiveCall = async (message) => {
-        peerRef.current[message.senderId] = initializePeerConnection(message.senderId);
-        /*
-        let chatChannel;
-        peerConnection.ondatachannel = (event) => {
-            if (event.channel.label == 'chat') {
-                chatChannel = event.channel;
-                chatChannel.onmessage = (event) => console.log('onmessage:', event.data);
-                chatChannel.onopen = () => {
-                    console.log('onopen');
-                    chatChannel.send("hola senor");
-                }
-
-                chatChannel.onclose = () => console.log('onclose');
-            }
-        };
-        */
+        const peerConnection =  initializePeerConnection(message.senderId);
+        const  tempPeerConections = peerConnections
+        tempPeerConections[message.senderId] = peerConnection;
+        setPeerConnections(tempPeerConections);
+        setRerenderNumb(reRenderNumb+1);
 
         if (message.offer) {
-            console.log("of")
-            peerRef.current[message.senderId].setRemoteDescription(new RTCSessionDescription(message.offer));
+            peerConnections[message.senderId].setRemoteDescription(new RTCSessionDescription(message.offer));
 
             videoStream.current.getTracks().forEach(track => {
-                peerRef.current[message.senderId].addTrack(track, videoStream.current);
+                peerConnections[message.senderId].addTrack(track, videoStream.current);
             });
+            const answer = await peerConnections[message.senderId].createAnswer();
+            await peerConnections[message.senderId].setLocalDescription(answer);
 
-            const answer = await peerRef.current[message.senderId].createAnswer();
-            await peerRef.current[message.senderId].setLocalDescription(answer);
-            socket.emit('answer', {"senderId":id,"id":message.senderId,"answer":answer});
+            socket.emit('answer', {senderId:id,id:message.senderId,answer:answer});
             
         }   
     }
