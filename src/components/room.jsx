@@ -28,17 +28,13 @@ function Room(props) {
         socket.emit("joinRoom", roomId);
         socket.on("you", (myId) => {
             id = myId;
-            console.log(id);
         });
         socket.on("joinedRoom", (peersConnected) => {
-            console.log(peersConnected);
             peersConnected.forEach( (peerID) => {
-                console.log(peerID);
                 makeCall(peerID);
             })
         });
         socket.on("offer", async (message) => {
-            console.log("motatt offer");
             await receiveCall(message);
             
         });
@@ -54,9 +50,7 @@ function Room(props) {
         });
 
         socket.on('answer', async message => {
-            console.log("før if i ans")
             if (message.answer) {
-                console.log(message)
                 const remoteDesc = new RTCSessionDescription(message.answer);
                 await peerConnections[message.senderId].setRemoteDescription(remoteDesc);
             }
@@ -98,14 +92,20 @@ function Room(props) {
     const renderPartnerVideo = () => {
         let renderedvids = [];
         console.log("runner denne flere ganger???");
-        // for(const peerConnection in peerConnections){
-        //     console.log(peerConnections);
-        //     renderedvids.push(
-        //         <Partner key={peerConnection} peerConnection={peerConnections[peerConnection]} reRenderNumb={reRenderNumb}></Partner>
-        //     ); 
-        // }
+        for(const peerConnection in peerConnections){
+            console.log("peerConnections");
+            console.log(peerConnections);
+            renderedvids.push(
+                <Partner key={peerConnection} peerConnection={peerConnections[peerConnection]} reRenderNumb={reRenderNumb}></Partner>
+            ); 
+        }
 
-        
+        // Object.entries(peerConnections).map(([index,peerConnection]) => {
+        //     console.log("inni for");
+        //     renderedvids.push(
+        //         <Partner key={index} peerConnection={peerConnection} reRenderNumb={reRenderNumb}></Partner>
+        //     );
+        // });
         return renderedvids;
     };
 
@@ -121,14 +121,7 @@ function Room(props) {
         });
 
 
-        /*
-        const chatChannel = peerConnection.createDataChannel('chat');
-        chatChannel.onmessage = (event) => console.log('onmessage:', event.data);
-        chatChannel.onopen = () => {console.log('onopen')
-            chatChannel.send("hola senorita");
-            console.log(peerConnection)
-        };
-        chatChannel.onclose = () => console.log('onclose');*/
+        
 
         const offer = await peerConnections[peerId].createOffer();
         await peerConnections[peerId].setLocalDescription(offer);
@@ -138,12 +131,6 @@ function Room(props) {
     const initializePeerConnection = (peerId) => {
         const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
         const peerConnection = new RTCPeerConnection(configuration);
-
-        // peerConnection.addEventListener('track', async (event) => {
-        //     console.log(partnerVideos);
-        //     partnerVideos.current[peerId] = event.streams[0];
-        //     console.log(partnerVideos);
-        // }); 
 
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {

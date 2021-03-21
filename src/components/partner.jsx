@@ -2,12 +2,12 @@ import './partner.css';
 import {useEffect, useRef} from 'react';
 
 function Partner(props){
-    const partnerVideo = useRef({});
+    const partnerVideo = useRef();
 
     useEffect(() => {
         console.log("før lytteren");
         props.peerConnection.addEventListener('track', (event) => {
-            partnerVideo.current.srcObject = event.streams[props.reRenderNumb-1];
+            partnerVideo.current.srcObject = event.streams[0];
             console.log("EventTarget");
         }); 
     },[]);
@@ -18,6 +18,7 @@ function Partner(props){
                     Your browser does not support the video tag.
                     {props.reRenderNumb}
             </video>
+            <p>tester litt bro</p>
         </div>
     )
 }
