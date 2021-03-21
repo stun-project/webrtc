@@ -1,0 +1,11 @@
+minikube dashboard
+kubectl proxy
+
+
+-- client
+
+ssh -L 12345:localhost:8001 myLogin@myRemoteServer
+
+
+
+http://localhost:12345/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/
