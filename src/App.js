@@ -1,25 +1,20 @@
 import './App.css';
 import Header from './components/header'
 import Landing from './components/landing'
-import {useState} from 'react';
-import P2p from './components/p2p'
+import Room from './components/room'
+import { Route, BrowserRouter as Router } from "react-router-dom";
+
 
 function App() {
-  const [connecting, setConnecting] = useState(false);
-  const [name, setName] = useState("");
-
-
-  const connect = (name) => {
-    setConnecting(true);
-    setName(name);
-  };
-
-
   return (
-    <div className="App">
-      <Header/>
-      {connecting ?<P2p name={name}/>:<Landing connect={connect}/>}
-    </div>
+    <Router>
+      <div className="App">
+        <Header/>
+        <Route exact path="/" component={Landing}/>
+        <Route exact path="/rooms" component={Landing}/>
+        <Route exact path="/rooms/:id"  component={Room}/>
+      </div>
+    </Router>
   );
 }
 
