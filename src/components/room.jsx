@@ -7,9 +7,12 @@ import Partner from "./partner";
 function Room(props) {
     let id = "";
     const [peerConnections,setPeerConnections] = useState({});
-    const [peerConnectionArr, setPeerConnectionArr] = useState([]);
+    const [peerConnectionArr, setPeerConnectionArr] = useState([]); //for rendering purposes
     const videoRef = useRef();
     const videoStream = useRef();
+    const videoStyle = {
+        width:1280/(peerConnectionArr.length+1)
+    }
     
 
     useEffect(() => {
@@ -30,8 +33,8 @@ function Room(props) {
             id = myId;
         });
         socket.on("joinedRoom", (peersConnected) => {
-            peersConnected.forEach( (peerID) => {
-                makeCall(peerID);
+            peersConnected.forEach( (peerId) => {
+                makeCall(peerId);
             })
         });
         socket.on("offer", async (message) => {
@@ -61,8 +64,8 @@ function Room(props) {
     const initializeVideo = async () => {
         const constraints = {
             'video': {
-                "width":500,
-                "height":500
+                "width":1280,
+                "height":720
             },
             'audio': true
         }
@@ -83,33 +86,15 @@ function Room(props) {
 
     const renderUserVideo = () => {
         return (
-        <video autoPlay={true} ref={videoRef} muted>
-            Your browser does not support the video tag.
-        </video>
+            <div className="videoDiv">
+                <video autoPlay={true} ref={videoRef} muted className="video" style={videoStyle}>
+                    Your browser does not support the video tag.
+                </video>
+            </div>
         );
     };
 
     const renderPartnerVideo = () => {
-        let renderedvids = [];
-        console.log("runner denne flere ganger???");
-        // for(const peerConnection in peerConnections){
-        //     console.log(peerConnection);
-        //     console.log(peerConnections);
-        //     let element = <p>Funker dette?</p>
-        //     renderedvids.push(
-        //         //<Partner key={peerConnection} peerConnection={peerConnections[peerConnection]} reRenderNumb={reRenderNumb}></Partner>
-        //         element
-        //     ); 
-        // }
-
-        // Object.entries(peerConnections).map(([index,peerConnection]) => {
-        //     console.log("inni for");
-        //     renderedvids.push(
-        //         <Partner key={index} peerConnection={peerConnection} reRenderNumb={reRenderNumb}></Partner>
-        //     );
-        // });
-        console.log(peerConnectionArr);
-
         return peerConnectionArr.map((peerConnection) => (<Partner key={peerConnection} peerConnection={peerConnection}></Partner>));
     };
 
@@ -134,6 +119,7 @@ function Room(props) {
 
     const initializePeerConnection = (peerId) => {
         const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
+
         const peerConnection = new RTCPeerConnection(configuration);
 
         peerConnection.onicecandidate = (event) => {
@@ -168,11 +154,9 @@ function Room(props) {
     }
 
     return (
-        <div className="p2p">
+        <div className="videoRoom">
             {renderUserVideo()}
-            <div>
-                {renderPartnerVideo()}
-            </div>
+            {renderPartnerVideo()}
         </div>
     );
 }
