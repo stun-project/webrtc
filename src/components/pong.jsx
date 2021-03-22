@@ -6,17 +6,15 @@ const socket = io("localhost:8000/");
 function Pong(props) {
     const [id, setId] = useState("");
     const [connected, setConnected] = useState(false);
-    const [peers, setPeers] = useState({});
     const [receivingCall, setReceivingCall] = useState(false);
     const peerRef = useRef();
-    const videoRef = useRef();
     const partnerVideoRef = useRef();
     const videoStream = useRef();
     
 
     useEffect(() => {
         initializeSocket();
-        initializeVideo();
+        //initializeVideo();
     },[]);
 
     const initializeSocket = () => {
@@ -51,61 +49,71 @@ function Pong(props) {
         //     }
         // });
 
-        socket.emit("awaitingGame")
+        socket.emit("awaitingGame");
+        socket.on("you", (myId) => {
+            setId(myId);
+        });
 
-        
-    };
+        socket.on("gamePartnerId", (partnerId) => {
+            //sende ut et offer?
+            //her har den mottatt en partner
+        });
 
-
-    const renderPeers = () => {
-        const renderdPeers = [];
-        for(const [peerId,name] of Object.entries(peers)){
-            if(peerId !== id){
-                renderdPeers.push(<p onClick={() => makeCall(peerId)} key={peerId}>{name}</p>);
-            }
-        }
-        return renderdPeers;
-        
-    };
-
-    const initializeVideo = () => {
-        const constraints = {
-            'video': {
-                "width":500,
-                "height":500
-            },
-            'audio': true
-        }
-
-        navigator.mediaDevices.getDisplayMedia(constraints)
-            .then(stream => {
-                videoStream.current = stream;
-                let video = videoRef.current;
-                video.srcObject = stream;
-                
-            })
-            .catch(error => {
-                console.error('Error accessing media devices.', error);
+        socket.on("waitForPartner", () => {
+            //printe venteskjerm??
         });
 
         
     };
 
-    const renderUserVideo = () => {
-        return (
-        <video autoPlay={true} ref={videoRef} muted>
-            Your browser does not support the video tag.
-        </video>
-        );
-    };
 
-    const renderPartnerVideo = () => {
-        return (
-        <video autoPlay={true} ref={partnerVideoRef} muted>
-            Your browser does not support the video tag.
-        </video>
-        );
-    };
+    // const renderPeers = () => {
+    //     const renderdPeers = [];
+    //     for(const [peerId,name] of Object.entries(peers)){
+    //         if(peerId !== id){
+    //             renderdPeers.push(<p onClick={() => makeCall(peerId)} key={peerId}>{name}</p>);
+    //         }
+    //     }
+    //     return renderdPeers;
+        
+    // };
+
+    // const initializeVideo = () => {
+    //     const constraints = {
+    //         'video': {
+    //             "width":500,
+    //             "height":500
+    //         },
+    //         'audio': true
+    //     }
+
+    //     navigator.mediaDevices.getDisplayMedia(constraints)
+    //         .then(stream => {
+    //             videoStream.current = stream;
+    //             let video = videoRef.current;
+    //             video.srcObject = stream;
+                
+    //         })
+    //         .catch(error => {
+    //             console.error('Error accessing media devices.', error);
+    //     });
+    // };
+
+    // const renderUserVideo = () => {
+    //     return (
+    //     <video autoPlay={true} ref={videoRef} muted>
+    //         Your browser does not support the video tag.
+    //     </video>
+    //     );
+    // };
+
+    // const renderPartnerVideo = () => {
+    //     return (
+    //     <video autoPlay={true} ref={partnerVideoRef} muted>
+    //         Your browser does not support the video tag.
+    //     </video>
+    //     );
+    // };
 
     async function makeCall(peerId) {
         peerRef.current = initializePeerConnection(peerId);
@@ -188,12 +196,13 @@ function Pong(props) {
     }
 
     return (
-        <div className="p2p">
-            {renderUserVideo()}
+        <div className="pong">
+            {/* {renderUserVideo()}
             {renderPartnerVideo()}
             <aside>
                 {renderPeers()}
-            </aside>
+            </aside> */}
+            <canvas id="gameScreen" width="700" height="600"/>
         </div>
     );
 }
