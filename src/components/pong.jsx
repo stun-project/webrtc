@@ -1,9 +1,9 @@
-import './p2p.css';
+import './pong.css';
 import {useState, useEffect, useRef} from 'react';
 import { io } from "socket.io-client";
 const socket = io("localhost:8000/");
 
-function P2p(props) {
+function Pong(props) {
     const [id, setId] = useState("");
     const [connected, setConnected] = useState(false);
     const [peers, setPeers] = useState({});
@@ -20,36 +20,38 @@ function P2p(props) {
     },[]);
 
     const initializeSocket = () => {
-        socket.emit("my_name_is",props.name);
+        // socket.emit("my_name_is",props.name);
 
-        socket.on("you", (myId) => {
-            setId(myId);
-        });
-        socket.on("peers", (peersConnected) => {
-            setPeers(peersConnected);
-        });
-        socket.on("offer", async (message) => {
-            await receiveCall(message);
-        });
+        // socket.on("you", (myId) => {
+        //     setId(myId);
+        // });
+        // socket.on("peers", (peersConnected) => {
+        //     setPeers(peersConnected);
+        // });
+        // socket.on("offer", async (message) => {
+        //     await receiveCall(message);
+        // });
 
-        socket.on('candidate', async (message) => { 
-            console.log(peerRef.current);           
-            if (message.candidate) {
-                try {
-                    await peerRef.current.addIceCandidate(message.candidate);
-                } catch (e) {
-                    console.error('Error adding received ice candidate', e);
-                }
-            }
-        });
+        // socket.on('candidate', async (message) => { 
+        //     console.log(peerRef.current);           
+        //     if (message.candidate) {
+        //         try {
+        //             await peerRef.current.addIceCandidate(message.candidate);
+        //         } catch (e) {
+        //             console.error('Error adding received ice candidate', e);
+        //         }
+        //     }
+        // });
 
-        socket.on('answer', async message => {
-            if (message.answer) {
-                console.log(peerRef.current);
-                const remoteDesc = new RTCSessionDescription(message.answer);
-                await peerRef.current.setRemoteDescription(remoteDesc);
-            }
-        });
+        // socket.on('answer', async message => {
+        //     if (message.answer) {
+        //         console.log(peerRef.current);
+        //         const remoteDesc = new RTCSessionDescription(message.answer);
+        //         await peerRef.current.setRemoteDescription(remoteDesc);
+        //     }
+        // });
+
+        socket.emit("awaitingGame")
 
         
     };
@@ -196,4 +198,4 @@ function P2p(props) {
     );
 }
 
-export default P2p;
+export default Pong;

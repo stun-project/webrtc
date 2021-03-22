@@ -15,3 +15,7 @@ input[type=text] {
     border: 1px solid;
     border-left: 0;
   }
+
+  .gameBtn{
+    border: 1px solid;
+  }
