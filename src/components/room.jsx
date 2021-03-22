@@ -12,7 +12,7 @@ function Room(props) {
     const videoStream = useRef();
     const styling = {
         videoStyle:{
-            width:1280/(peerConnectionArr.length+1),
+            width:1280,
             margin: 10
         },
         divStyle:{
@@ -66,7 +66,16 @@ function Room(props) {
                 await peerConnections[message.senderId].setRemoteDescription(remoteDesc);
             }
             
-        });        
+        }); 
+        
+        socket.on("thisPeerLeft", (peerId) => {
+            const peerConnection = peerConnections[peerId];
+            const  tempPeerConections = peerConnections;
+            delete tempPeerConections[peerId];
+            setPeerConnections(tempPeerConections);
+            setPeerConnectionArr((peerConnectionArr) => peerConnectionArr.filter((pc) => pc !== peerConnection));
+
+        });
     };
 
     const initializeVideo = async () => {
@@ -93,13 +102,13 @@ function Room(props) {
     };
 
     const renderUserVideo = () => {
-        if(peerConnectionArr.length > 4){
+        if(peerConnectionArr.length > 3){
             styling.videoStyle = {
                 width: 1280/3,
                 margin: 10
             }
         }
-        else if(peerConnectionArr.length > 2){
+        else if(peerConnectionArr.length >= 1){
             styling.videoStyle = {
                 width: 1280/2,
                 margin: 10
@@ -116,13 +125,13 @@ function Room(props) {
     };
 
     const renderPartnerVideo = () => {
-        if(peerConnectionArr.length > 4){
+        if(peerConnectionArr.length > 3){
             styling.videoStyle = {
                 width: 1280/3,
                 margin: 10
             }
         }
-        else if(peerConnectionArr.length > 2){
+        else if(peerConnectionArr.length >= 1){
             styling.videoStyle = {
                 width: 1280/2,
                 margin: 10
