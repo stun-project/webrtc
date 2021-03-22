@@ -11,8 +11,8 @@ function Partner(props){
     },[]);
 
     return (
-        <div className="videoDiv">
-            <video autoPlay={true} ref={partnerVideo} muted className="video">
+        <div style={props.styling.divStyle}>
+            <video autoPlay={true} ref={partnerVideo} muted style={props.styling.videoStyle}>
                     Your browser does not support the video tag.
             </video>
         </div>

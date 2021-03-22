@@ -10,10 +10,16 @@ function Room(props) {
     const [peerConnectionArr, setPeerConnectionArr] = useState([]); //for rendering purposes
     const videoRef = useRef();
     const videoStream = useRef();
-    const videoStyle = {
-        width:1280/(peerConnectionArr.length+1)
+    const styling = {
+        videoStyle:{
+            width:1280/(peerConnectionArr.length+1),
+            margin: 10
+        },
+        divStyle:{
+            "min-width": 350,
+            display:"inline"
+        }
     }
-    
 
     useEffect(() => {
         initialize();
@@ -33,9 +39,11 @@ function Room(props) {
             id = myId;
         });
         socket.on("joinedRoom", (peersConnected) => {
-            peersConnected.forEach( (peerId) => {
-                makeCall(peerId);
-            })
+            if(peersConnected !== undefined && peersConnected !== null){
+                peersConnected.forEach( (peerId) => {
+                    makeCall(peerId);
+                });
+            }
         });
         socket.on("offer", async (message) => {
             await receiveCall(message);
@@ -85,9 +93,22 @@ function Room(props) {
     };
 
     const renderUserVideo = () => {
+        if(peerConnectionArr.length > 4){
+            styling.videoStyle = {
+                width: 1280/3,
+                margin: 10
+            }
+        }
+        else if(peerConnectionArr.length > 2){
+            styling.videoStyle = {
+                width: 1280/2,
+                margin: 10
+            }
+        }
+
         return (
-            <div className="videoDiv">
-                <video autoPlay={true} ref={videoRef} muted className="video" style={videoStyle}>
+            <div style={styling.divStyle}>
+                <video autoPlay={true} ref={videoRef} muted style={styling.videoStyle}>
                     Your browser does not support the video tag.
                 </video>
             </div>
@@ -95,7 +116,20 @@ function Room(props) {
     };
 
     const renderPartnerVideo = () => {
-        return peerConnectionArr.map((peerConnection) => (<Partner key={peerConnection} peerConnection={peerConnection}></Partner>));
+        if(peerConnectionArr.length > 4){
+            styling.videoStyle = {
+                width: 1280/3,
+                margin: 10
+            }
+        }
+        else if(peerConnectionArr.length > 2){
+            styling.videoStyle = {
+                width: 1280/2,
+                margin: 10
+            }
+        }
+
+        return peerConnectionArr.map((peerConnection) => (<Partner key={peerConnection} peerConnection={peerConnection} styling={styling}></Partner>));
     };
 
     const makeCall = async (peerId) => {
