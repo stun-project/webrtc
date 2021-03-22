@@ -16,7 +16,6 @@ function Partner(props){
         <div>
             <video autoPlay={true} ref={partnerVideo} muted>
                     Your browser does not support the video tag.
-                    {props.reRenderNumb}
             </video>
             <p>tester litt bro</p>
         </div>

@@ -7,7 +7,7 @@ import Partner from "./partner";
 function Room(props) {
     let id = "";
     const [peerConnections,setPeerConnections] = useState({});
-    const [reRenderNumb, setRerenderNumb] = useState(0);
+    const [peerConnectionArr, setPeerConnectionArr] = useState([]);
     const videoRef = useRef();
     const videoStream = useRef();
     
@@ -92,13 +92,15 @@ function Room(props) {
     const renderPartnerVideo = () => {
         let renderedvids = [];
         console.log("runner denne flere ganger???");
-        for(const peerConnection in peerConnections){
-            console.log("peerConnections");
-            console.log(peerConnections);
-            renderedvids.push(
-                <Partner key={peerConnection} peerConnection={peerConnections[peerConnection]} reRenderNumb={reRenderNumb}></Partner>
-            ); 
-        }
+        // for(const peerConnection in peerConnections){
+        //     console.log(peerConnection);
+        //     console.log(peerConnections);
+        //     let element = <p>Funker dette?</p>
+        //     renderedvids.push(
+        //         //<Partner key={peerConnection} peerConnection={peerConnections[peerConnection]} reRenderNumb={reRenderNumb}></Partner>
+        //         element
+        //     ); 
+        // }
 
         // Object.entries(peerConnections).map(([index,peerConnection]) => {
         //     console.log("inni for");
@@ -106,7 +108,9 @@ function Room(props) {
         //         <Partner key={index} peerConnection={peerConnection} reRenderNumb={reRenderNumb}></Partner>
         //     );
         // });
-        return renderedvids;
+        console.log(peerConnectionArr);
+
+        return peerConnectionArr.map((peerConnection) => (<Partner key={peerConnection} peerConnection={peerConnection}></Partner>));
     };
 
     const makeCall = async (peerId) => {
@@ -114,7 +118,7 @@ function Room(props) {
         const  tempPeerConections = peerConnections
         tempPeerConections[peerId] = peerConnection;
         setPeerConnections(tempPeerConections);
-        setRerenderNumb(reRenderNumb+1);
+        setPeerConnectionArr((peerConnectionArr) => [...peerConnectionArr,peerConnection]);
 
         videoStream.current.getTracks().forEach(track => {
             peerConnections[peerId].addTrack(track, videoStream.current);
@@ -147,7 +151,7 @@ function Room(props) {
         const  tempPeerConections = peerConnections
         tempPeerConections[message.senderId] = peerConnection;
         setPeerConnections(tempPeerConections);
-        setRerenderNumb(reRenderNumb+1);
+        setPeerConnectionArr((peerConnectionArr) => [...peerConnectionArr,peerConnection]);
 
         if (message.offer) {
             peerConnections[message.senderId].setRemoteDescription(new RTCSessionDescription(message.offer));
@@ -166,7 +170,9 @@ function Room(props) {
     return (
         <div className="p2p">
             {renderUserVideo()}
-            {renderPartnerVideo()}
+            <div>
+                {renderPartnerVideo()}
+            </div>
         </div>
     );
 }
