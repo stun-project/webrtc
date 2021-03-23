@@ -10,11 +10,15 @@ function Pong(props) {
     const peerRef = useRef();
     const partnerVideoRef = useRef();
     const videoStream = useRef();
+
+    //Mine:
+    const [awaitingGame, setAwaitingGame] = useState(true);
     
 
     useEffect(() => {
         initializeSocket();
         //initializeVideo();
+        //Initialisere spillogikk??
     },[]);
 
     const initializeSocket = () => {
@@ -50,6 +54,7 @@ function Pong(props) {
         // });
 
         socket.emit("awaitingGame");
+
         socket.on("you", (myId) => {
             setId(myId);
         });
@@ -57,79 +62,44 @@ function Pong(props) {
         socket.on("gamePartnerId", (partnerId) => {
             //sende ut et offer?
             //her har den mottatt en partner
+            setAwaitingGame(false);
+            makeCall(partnerId);
         });
 
         socket.on("waitForPartner", () => {
             //printe venteskjerm??
+            console.log("venter!");
+            setAwaitingGame(true);
         });
 
         
     };
 
+    function renderScreen(){
+        if(awaitingGame){
+            return <p>waiting for a partner</p>
+        }
+        else{
+            return <canvas id="gameScreen" width="700" height="600"/>
+        }
+    }
 
-    // const renderPeers = () => {
-    //     const renderdPeers = [];
-    //     for(const [peerId,name] of Object.entries(peers)){
-    //         if(peerId !== id){
-    //             renderdPeers.push(<p onClick={() => makeCall(peerId)} key={peerId}>{name}</p>);
-    //         }
-    //     }
-    //     return renderdPeers;
-        
-    // };
-
-    // const initializeVideo = () => {
-    //     const constraints = {
-    //         'video': {
-    //             "width":500,
-    //             "height":500
-    //         },
-    //         'audio': true
-    //     }
-
-    //     navigator.mediaDevices.getDisplayMedia(constraints)
-    //         .then(stream => {
-    //             videoStream.current = stream;
-    //             let video = videoRef.current;
-    //             video.srcObject = stream;
-                
-    //         })
-    //         .catch(error => {
-    //             console.error('Error accessing media devices.', error);
-    //     });
-    // };
-
-    // const renderUserVideo = () => {
-    //     return (
-    //     <video autoPlay={true} ref={videoRef} muted>
-    //         Your browser does not support the video tag.
-    //     </video>
-    //     );
-    // };
-
-    // const renderPartnerVideo = () => {
-    //     return (
-    //     <video autoPlay={true} ref={partnerVideoRef} muted>
-    //         Your browser does not support the video tag.
-    //     </video>
-    //     );
-    // };
 
     async function makeCall(peerId) {
         peerRef.current = initializePeerConnection(peerId);
-        videoStream.current.getTracks().forEach(track => {
-            peerRef.current.addTrack(track, videoStream.current);
-        });
+        // videoStream.current.getTracks().forEach(track => {
+        //     peerRef.current.addTrack(track, videoStream.current);
+        // });
 
 
-        /*
+        
         const chatChannel = peerConnection.createDataChannel('chat');
         chatChannel.onmessage = (event) => console.log('onmessage:', event.data);
         chatChannel.onopen = () => {console.log('onopen')
             chatChannel.send("hola senorita");
             console.log(peerConnection)
         };
-        chatChannel.onclose = () => console.log('onclose');*/
+        chatChannel.onclose = () => console.log('onclose');
 
         const offer = await peerRef.current.createOffer();
         await peerRef.current.setLocalDescription(offer);
@@ -149,10 +119,10 @@ function Pong(props) {
             }
         });
 
-        peerConnection.addEventListener('track', async (event) => {
-            console.log("inni listener")
-            partnerVideoRef.current.srcObject = event.streams[0]
-        }); 
+        // peerConnection.addEventListener('track', async (event) => {
+        //     console.log("inni listener")
+        //     partnerVideoRef.current.srcObject = event.streams[0]
+        // }); 
 
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
@@ -202,7 +172,7 @@ function Pong(props) {
             <aside>
                 {renderPeers()}
             </aside> */}
-            <canvas id="gameScreen" width="700" height="600"/>
+            {renderScreen()}
         </div>
     );
 }
