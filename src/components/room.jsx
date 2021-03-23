@@ -6,10 +6,13 @@ import Partner from "./partner";
 function Room(props) {
   let id = "";
   const [peerConnections, setPeerConnections] = useState({});
-  let key = useState(0);
-  const [peerConnectionArr, setPeerConnectionArr] = useState([]); //for rendering purposes
+  const [peerConnectionArr, setPeerConnectionArr] = useState(() => {return []}); //for rendering purposes
+  const peerArrRef = useRef();
+  peerArrRef.current = peerConnectionArr; 
   const videoRef = useRef();
   const videoStream = useRef();
+  const [numb, setNumb] = useState(0);
+  let arr = [];
   const styling = {
     videoStyle: {
       width: 1280,
@@ -71,6 +74,11 @@ function Room(props) {
       }
     });
 
+    // socket.on('thisPeerLeft', ()=>{
+    //     window.location.reload()
+    // })
+
+    
     socket.on("thisPeerLeft", (peerId) => {
       console.log(`Peer: ${peerId} is leaving, removing...`);
       const peerConnection = peerConnections[peerId];
@@ -86,13 +94,13 @@ function Room(props) {
         `Peer: ${peerId} Is removed from PeerconnectionsObject ${peerConnections}`
       );
 
-      let x = (peerConnectionArr) =>
-        [...peerConnectionArr, peerConnection].filter(
-          (pc) => pc !== peerConnection
-        );
-      console.log("PeerconnectionArr is: ", x);
-      console.log("PeerconnectionArr will be: ", x);
-      setPeerConnectionArr(x);
+    //   setPeerConnectionArr((peerConnectionArr) =>
+    //   [...peerConnectionArr].filter(
+    //     (pc) => pc == peerConnection
+    //   )
+    // );
+
+    setPeerConnectionArr(peerArrRef.current.filter((pc) => pc !== peerConnection));
       console.log(
         `Peer: ${peerId} Is removed from PeerconnectionsArray ${peerConnectionArr}`,
         peerConnectionArr
@@ -100,7 +108,8 @@ function Room(props) {
       console.log(`Room is currently: `, peerConnections);
       console.log(`Room is currently: `, peerConnectionArr);
     });
-  };
+    
+  }
 
   const initializeVideo = async () => {
     const constraints = {
@@ -161,11 +170,10 @@ function Room(props) {
 
     console.log(peerConnectionArr);
     console.log(peerConnectionArr[0]);
-    let peers = peerConnectionArr.map((peerConnection) => {
-      key += 1;
+    let peers = peerConnectionArr.map((peerConnection,index) => {
       return (
         <Partner
-          key={key}
+          key={index}
           peerConnection={peerConnection}
           styling={styling}
         ></Partner>
@@ -183,8 +191,8 @@ function Room(props) {
     setPeerConnections(tempPeerConections);
     console.log(peerConnectionArr);
 
-    setPeerConnectionArr((peerConnectionArr) => [
-      ...peerConnectionArr,
+    setPeerConnectionArr([
+      ...peerArrRef.current,
       peerConnection,
     ]);
     console.log(peerConnectionArr);
@@ -257,9 +265,10 @@ function Room(props) {
     console.log(peerConnectionArr);
     setPeerConnections(tempPeerConections);
 
-    let x = (peerConnectionArr) => [...peerConnectionArr, peerConnection];
-
-    setPeerConnectionArr(x);
+    setPeerConnectionArr([
+        ...peerArrRef.current,
+        peerConnection,
+      ]);
     console.log(peerConnectionArr);
 
     if (message.offer) {
