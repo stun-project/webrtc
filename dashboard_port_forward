@@ -4,7 +4,7 @@ kubectl proxy
 
 -- client
 
-ssh -L 12345:localhost:8001 myLogin@myRemoteServer
+ssh -L 80085:localhost:8001 myLogin@myRemoteServer
 
 
 
