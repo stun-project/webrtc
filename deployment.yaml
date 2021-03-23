@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  selector:
+    matchLabels:
+      app: webrtc
+      tier: frontend
+      track: stable
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: webrtc
+        tier: frontend
+        track: stable
+    spec:
+      containers:
+        - name: webrtc
+          image: sigmundgranaas/webrtc
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/usr/sbin/nginx", "-s", "quit"]
