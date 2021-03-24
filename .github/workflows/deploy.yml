@@ -15,7 +15,7 @@ name: Build and deploy to production server
 on:
   push:
     branches:
-        - main 
+        - master 
 jobs:
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
