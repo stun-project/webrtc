@@ -1,5 +1,5 @@
 import './pong.css';
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import { io } from "socket.io-client";
 const socket = io("localhost:8000/");
 
@@ -8,7 +8,9 @@ function Pong() {
     let peerConnection = {};
     let position = 0;
     let peerPosition = 0;
+    let thisIsTheCaller;
     const [awaitingGame, setAwaitingGame] = useState(true);
+    const canvas = useRef();
     
 
     useEffect(() => {
@@ -28,8 +30,6 @@ function Pong() {
         });
 
         socket.on("gamePartnerId", (partnerId) => {
-            //sende ut et offer?
-            //her har den mottatt en partner
             setAwaitingGame(false);
             makeCall(partnerId);
         });
@@ -68,13 +68,14 @@ function Pong() {
             return <p>waiting for a partner</p>
         }
         else{
-            return <canvas id="gameScreen" width="700" height="600"/>
+            return <canvas ref={canvas} id="gameScreen" width="700" height="600"/>
         }
     }
 
 
     async function makeCall(peerId) {
         console.log("Denne klienten ringer!!!!")
+        thisIsTheCaller = true;
         initializePeerConnection(peerId);
               
         const chatChannel = peerConnection.createDataChannel('chat');
@@ -100,6 +101,7 @@ function Pong() {
 
 
     const receiveCall = async (message) => {
+        thisIsTheCaller = false;
         console.log("Denne klienten mottar!!")
         initializePeerConnection(message.senderId);
 
@@ -122,7 +124,7 @@ function Pong() {
         console.log("dataTransmission har kjørt")
         chatChannel.onmessage = (event) => {
             console.log('onmessage:', event.data);
-            peerPosition = event.data;
+            peerPosition = event.data; //fikse så man kan sende andre ting?
         }
         chatChannel.onopen = () => {
             console.log('onopen')
@@ -137,19 +139,24 @@ function Pong() {
 
     const initialize = (chatChannel) => {
         console.log("init kjørt")
-        // const canvas = document.getElementById("tegneflate");
-        // const ctx = canvas.getContext("2d");
+        let gameVariables;
+        if(thisIsTheCaller){
+            gameVariables = [350,300,true,false,0.5];
+        }else{
+            gameVariables = [350,300,false,false,0.5];
+        }
+        const ctx = canvas.current.getContext("2d");
         document.onkeypress = function (evt) {
             keyPress(evt,chatChannel);
         }
         setInterval(() => {
-            //animasjon(ctx);
-        },10);
+            gameVariables = animasjon(ctx,gameVariables);
+        },2);
     }
 
     const keyPress = (evt,chatChannel) => {
         console.log("Trykket på en knapp")
-        const speed = 3;
+        const speed = 7;
         switch(evt.code){
             case 'KeyA' || 'ArrowLeft':
                 position -= speed;
@@ -162,61 +169,89 @@ function Pong() {
     }
 
 
-    const animasjon = (ctx) => {
-        // if(position > 700){
-        //     position = 0;
-        // }
-        // if(position < 0){
-        //     position = 700;
-        // }
+    const animasjon = (ctx,gameVariables) => {
+        //xPosK,yPosK,directionX,directionY,speedBullet
+        if(position > 700){
+            position = 0;
+        }
+        else if(position < 0){
+            position = 700;
+        }
 
-        // //Kule	
-        // if(yPosK < 600 && yPosK > 0){
 
-        //     if(retningX == true){
-        //         xPosK +=fartK;
-        //     }
-        //     if(retningX == false){
-        //         xPosK -=fartK;
-        //     }
-        // //styre y - retning
-        //     if(retningY == true){
-        //         yPosK +=fartK;
-        //     }
-        //     if(retningY == false){
-        //         yPosK -=fartK;
-        //     }
-            
-            
-        // //skifte x - retning
-        //     if(xPosK > 690){
-        //         retningX = false;
-        //     }
-        //     if(xPosK < 10){
-        //         retningX = true;
-        //     }
-            
-        // //skifte y - retning
-        //     if(yPosK < 30){
-        //         if(xPosK > (xPos2 - 7) && xPosK < (xPos2 + 80)){
-        //         retningY = true;
-        //         fartK += 0.25;
-        //         poeng1 += 1;
-        //         }
-        //     }
-            
-        //     if(yPosK > 570){
-        //         if(xPosK > (xPos - 7) && xPosK < (xPos + 80))
-        //         {
-        //         retningY = false;
-        //         fartK += 0.25;
-        //         poeng2 += 1;
-        //         }
-        //     }
-        // }else{
-        //     console.log("lost game")
-        // }
+        //Kule	
+        if(gameVariables[1] < 600 && gameVariables[1] > 0){
+            if(gameVariables[2] == true){
+                gameVariables[1] += gameVariables[4];
+            }
+            if(gameVariables[2] == false){
+                gameVariables[1] -= gameVariables[4];
+            }
 
+            //styre y - retning
+            if(gameVariables[3] == true){
+                gameVariables[0] += gameVariables[4];
+            }
+            if(gameVariables[3] == false){
+                gameVariables[0] -= gameVariables[4];
+            }
+         
+         
+         
+        //skifte x - retning
+            if(gameVariables[0] > 690){
+                gameVariables[2] = false;
+            }
+            if(gameVariables[0] < 10){
+                gameVariables[2] = true;
+            }
+         
+        //skifte y - retning
+            if(gameVariables[1] < 30){
+                if(gameVariables[0] > (peerPosition - 7) && gameVariables[0] < (peerPosition + 80)){
+                    gameVariables[3] = true;
+                    gameVariables[4] += 0.25;
+                }
+            }
+         
+            if(gameVariables[1] > 570){
+                if(gameVariables[0] > (position - 7) && gameVariables[0] < (position + 80)){
+                    gameVariables[3] = false;
+                    gameVariables[4] += 0.25;
+                }
+            }
+        }else if(gameVariables[1] >= 600){
+            console.log("you lost the game!");
+        }else if(gameVariables[1] > 0){
+            console.log("opponent lost!")
+        }
+        
+        drawGame(ctx, gameVariables[0], gameVariables[1]);
+        return gameVariables
+    }
+
+    const drawGame = (ctx, xPosK, yPosK) => {
+        ctx.clearRect(0,0,700,600);
+                
+        //rektangel	
+        ctx.beginPath();
+        ctx.rect(position,590,70,5);
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "blue";
+        ctx.stroke();
+        //rektangel	2
+        ctx.beginPath();
+        ctx.rect(peerPosition,10,70,5);
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "red";
+        ctx.stroke();	
+        
+        //Kule	
+        ctx.beginPath();
+        ctx.arc(xPosK, yPosK, 20, 0, 2 * Math.PI);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "green";
+        ctx.stroke();            
     }
 
 
