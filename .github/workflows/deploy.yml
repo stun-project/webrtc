@@ -30,7 +30,7 @@ jobs:
     # Push the Docker image to Google Container Registry
     - name: Publish
       run: |-
-        docker push "${{ DOCKERHUB_USERNAME }}/webrtc" 
+        docker push "${{ secrets.DOCKERHUB_USERNAME }}/webrtc" 
    
     - name: Reset the frontend pod
       uses: fifsky/ssh-action@master
