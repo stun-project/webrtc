@@ -108,7 +108,7 @@ function Room(props) {
     };
 
     await navigator.mediaDevices
-      .getDisplayMedia(constraints)
+      .getUserMedia(constraints)
       .then((stream) => {
         videoStream.current = stream;
         let video = videoRef.current;
