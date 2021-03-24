@@ -21,8 +21,6 @@ function Room(props) {
     },
   };
 
-
-
   useEffect(() => {
     initialize();
   }, []);
@@ -74,34 +72,31 @@ function Room(props) {
     });
 
     socket.on("thisPeerLeft", (peerId) => {
-        console.log(`Peer: ${peerId} is leaving, removing...`);
-        const peerConnection = peerConnections[peerId];
-        
-        const tempPeerConections = peerConnections;
-        delete tempPeerConections[peerId];
-        setPeerConnections(tempPeerConections);
-        console.log(
-          `Peer: ${peerId} Is removed from PeerconnectionsObject ${peerConnections}`
-        );
-    
+      console.log(`Peer: ${peerId} is leaving, removing...`);
+      const peerConnection = peerConnections[peerId];
+
+      const tempPeerConections = peerConnections;
+      delete tempPeerConections[peerId];
+      setPeerConnections(tempPeerConections);
+      console.log(
+        `Peer: ${peerId} Is removed from PeerconnectionsObject ${peerConnections}`
+      );
+
       //   setPeerConnectionArr((peerConnectionArr) =>
       //   [...peerConnectionArr].filter(
       //     (pc) => pc == peerConnection
       //   )
       // );
-    
-      setPeerVideos((peerVideos=> peerVideos.filter((pv) => pv.id !== peerId)));
-        
-      });
+
+      setPeerVideos((peerVideos) =>
+        peerVideos.filter((pv) => pv.id !== peerId)
+      );
+    });
 
     // socket.on('thisPeerLeft', ()=>{
     //     window.location.reload()
     // })
-
-    
-    
-    
-  }
+  };
 
   const initializeVideo = async () => {
     const constraints = {
@@ -113,7 +108,7 @@ function Room(props) {
     };
 
     await navigator.mediaDevices
-      .getUserMedia(constraints)
+      .getDisplayMedia(constraints)
       .then((stream) => {
         videoStream.current = stream;
         let video = videoRef.current;
@@ -126,12 +121,12 @@ function Room(props) {
   };
 
   const renderUserVideo = () => {
-    if (peerVideos.length> 5) {
+    if (peerVideos.length > 3) {
       styling.videoStyle = {
         width: 1280 / 3,
         margin: 10,
       };
-    } else if (peerVideos.length >= 2) {
+    } else if (peerVideos.length >= 1) {
       styling.videoStyle = {
         width: 1280 / 2,
         margin: 10,
@@ -148,33 +143,32 @@ function Room(props) {
   };
 
   const renderPartnerVideo = () => {
-    if (peerVideos.length > 5) {
+    let peerSet = [];
+    let lastid = "";
+
+    peerVideos.forEach((peer) => {
+      if (peer.id !== lastid) {
+        peerSet.push(peer);
+      }
+      lastid = peer.id;
+    });
+
+    if (peerSet.length > 3) {
       styling.videoStyle = {
         width: 1280 / 3,
         margin: 10,
       };
-    } else if (peerVideos.length >= 2) {
+    } else if (peerSet.length >= 1) {
       styling.videoStyle = {
         width: 1280 / 2,
         margin: 10,
       };
     }
-    let peerSet = [];
-    let lastid = ""
 
-    peerVideos.forEach((peer)=> {
-        
-        if (peer.id !== lastid){
-            peerSet.push(peer);
-            
-        }
-        lastid = peer.id
-    })
+    console.log(peerVideos);
+    console.log(peerSet);
 
-    console.log(peerVideos)
-    console.log(peerSet)
-    
-    let peers = peerSet.map((peerConnection,index) => {
+    let peers = peerSet.map((peerConnection, index) => {
       return (
         <Partner
           key={index}
@@ -241,13 +235,14 @@ function Room(props) {
       }
     };
 
-    peerConnection.addEventListener('track', (event) => {
-        console.log(peerId)
-        
-        setPeerVideos((peerVideos) => 
-            [...peerVideos, {id: peerId, stream : event.streams[0]}]
-        );
-    });  
+    peerConnection.addEventListener("track", (event) => {
+      console.log(peerId);
+
+      setPeerVideos((peerVideos) => [
+        ...peerVideos,
+        { id: peerId, stream: event.streams[0] },
+      ]);
+    });
 
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
@@ -269,7 +264,6 @@ function Room(props) {
     console.log("recieved a call from: ", peerConnection);
 
     setPeerConnections(tempPeerConections);
-
 
     if (message.offer) {
       peerConnections[message.senderId].setRemoteDescription(
