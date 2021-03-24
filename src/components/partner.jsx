@@ -5,10 +5,8 @@ function Partner(props){
     const partnerVideo = useRef();
 
     useEffect(() => {
-        props.peerConnection.addEventListener('track', (event) => {
-            partnerVideo.current.srcObject = event.streams[0];
-        }); 
-    },[]);
+        partnerVideo.current.srcObject = props.peerConnection;
+    },[props.peerConnection]);
 
     return (
         <div style={props.styling.divStyle}>

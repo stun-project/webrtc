@@ -124,7 +124,7 @@ function P2p(props) {
 
   const initializePeerConnection = (peerId) => {
     const configuration = {
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      iceServers: [{ urls: "stun:localhost:3478" }],
     };
     const peerConnection = new RTCPeerConnection(configuration);
 
