@@ -40,8 +40,7 @@ function Pong() {
             setAwaitingGame(true);
         });
         
-        socket.on('candidate', async (message) => { 
-            console.log(peerConnection);           
+        socket.on('candidate', async (message) => {         
             if (message.candidate) {
                 try {
                     await peerConnection.addIceCandidate(message.candidate);
@@ -58,8 +57,6 @@ function Pong() {
         
         socket.on('answer', async message => {
             if (message.answer) {
-                console.log("answer")
-                console.log(peerConnection);
                 const remoteDesc = new RTCSessionDescription(message.answer);
                 await peerConnection.setRemoteDescription(remoteDesc);
             }
@@ -85,7 +82,6 @@ function Pong() {
 
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
-        console.log("sendt offer:")
         socket.emit('gameOffer',{"id":peerId, "senderId":id, "offer":offer});
     }
 
@@ -115,12 +111,8 @@ function Pong() {
         
         if (message.offer) {
             peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
-
-            console.log("Kommet til if inne receiveCall");
-
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
-            console.log(message.senderId);
             socket.emit('answer', {senderId:id,id:message.senderId,answer:answer});
             
         }   
@@ -145,8 +137,8 @@ function Pong() {
 
     const initialize = (chatChannel) => {
         console.log("init kjørt")
-        const canvas = document.getElementById("tegneflate");
-        const ctx = canvas.getContext("2d");
+        // const canvas = document.getElementById("tegneflate");
+        // const ctx = canvas.getContext("2d");
         document.onkeypress = function (evt) {
             keyPress(evt,chatChannel);
         }
