@@ -6,13 +6,10 @@ import Partner from "./partner";
 function Room(props) {
   let id = "";
   const [peerConnections, setPeerConnections] = useState({});
-  const [peerConnectionArr, setPeerConnectionArr] = useState(() => {return []}); //for rendering purposes
-  const peerArrRef = useRef();
-  peerArrRef.current = peerConnectionArr; 
+  const [peerVideos, setPeerVideos] = useState([]); //for rendering purposes
   const videoRef = useRef();
+  const peerVideoRef = useRef();
   const videoStream = useRef();
-  const [numb, setNumb] = useState(0);
-  let arr = [];
   const styling = {
     videoStyle: {
       width: 1280,
@@ -23,6 +20,8 @@ function Room(props) {
       display: "inline",
     },
   };
+
+
 
   useEffect(() => {
     initialize();
@@ -74,40 +73,33 @@ function Room(props) {
       }
     });
 
+    socket.on("thisPeerLeft", (peerId) => {
+        console.log(`Peer: ${peerId} is leaving, removing...`);
+        const peerConnection = peerConnections[peerId];
+        
+        const tempPeerConections = peerConnections;
+        delete tempPeerConections[peerId];
+        setPeerConnections(tempPeerConections);
+        console.log(
+          `Peer: ${peerId} Is removed from PeerconnectionsObject ${peerConnections}`
+        );
+    
+      //   setPeerConnectionArr((peerConnectionArr) =>
+      //   [...peerConnectionArr].filter(
+      //     (pc) => pc == peerConnection
+      //   )
+      // );
+    
+      setPeerVideos((peerVideos=> peerVideos.filter((pv) => pv.id !== peerId)));
+        
+      });
+
     // socket.on('thisPeerLeft', ()=>{
     //     window.location.reload()
     // })
 
     
-    socket.on("thisPeerLeft", (peerId) => {
-      console.log(`Peer: ${peerId} is leaving, removing...`);
-      const peerConnection = peerConnections[peerId];
-      console.log(
-        `Preparing to remove disconecting user`,
-        peerConnection,
-        peerConnectionArr
-      );
-      const tempPeerConections = peerConnections;
-      delete tempPeerConections[peerId];
-      setPeerConnections(tempPeerConections);
-      console.log(
-        `Peer: ${peerId} Is removed from PeerconnectionsObject ${peerConnections}`
-      );
-
-    //   setPeerConnectionArr((peerConnectionArr) =>
-    //   [...peerConnectionArr].filter(
-    //     (pc) => pc == peerConnection
-    //   )
-    // );
-
-    setPeerConnectionArr(peerArrRef.current.filter((pc) => pc !== peerConnection));
-      console.log(
-        `Peer: ${peerId} Is removed from PeerconnectionsArray ${peerConnectionArr}`,
-        peerConnectionArr
-      );
-      console.log(`Room is currently: `, peerConnections);
-      console.log(`Room is currently: `, peerConnectionArr);
-    });
+    
     
   }
 
@@ -121,7 +113,7 @@ function Room(props) {
     };
 
     await navigator.mediaDevices
-      .getDisplayMedia(constraints)
+      .getUserMedia(constraints)
       .then((stream) => {
         videoStream.current = stream;
         let video = videoRef.current;
@@ -134,12 +126,12 @@ function Room(props) {
   };
 
   const renderUserVideo = () => {
-    if (peerConnectionArr.length > 3) {
+    if (peerVideos.length> 5) {
       styling.videoStyle = {
         width: 1280 / 3,
         margin: 10,
       };
-    } else if (peerConnectionArr.length >= 1) {
+    } else if (peerVideos.length >= 2) {
       styling.videoStyle = {
         width: 1280 / 2,
         margin: 10,
@@ -156,31 +148,42 @@ function Room(props) {
   };
 
   const renderPartnerVideo = () => {
-    if (peerConnectionArr.length > 3) {
+    if (peerVideos.length > 5) {
       styling.videoStyle = {
         width: 1280 / 3,
         margin: 10,
       };
-    } else if (peerConnectionArr.length >= 1) {
+    } else if (peerVideos.length >= 2) {
       styling.videoStyle = {
         width: 1280 / 2,
         margin: 10,
       };
     }
+    let peerSet = [];
+    let lastid = ""
 
-    console.log(peerConnectionArr);
-    console.log(peerConnectionArr[0]);
-    let peers = peerConnectionArr.map((peerConnection,index) => {
+    peerVideos.forEach((peer)=> {
+        
+        if (peer.id !== lastid){
+            peerSet.push(peer);
+            
+        }
+        lastid = peer.id
+    })
+
+    console.log(peerVideos)
+    console.log(peerSet)
+    
+    let peers = peerSet.map((peerConnection,index) => {
       return (
         <Partner
           key={index}
-          peerConnection={peerConnection}
+          peerConnection={peerConnection.stream}
           styling={styling}
         ></Partner>
       );
     });
-    console.log("jskdnfkjnsd");
-    console.log(peerConnectionArr);
+
     return peers;
   };
 
@@ -189,13 +192,7 @@ function Room(props) {
     const tempPeerConections = peerConnections;
     tempPeerConections[peerId] = peerConnection;
     setPeerConnections(tempPeerConections);
-    console.log(peerConnectionArr);
 
-    setPeerConnectionArr([
-      ...peerArrRef.current,
-      peerConnection,
-    ]);
-    console.log(peerConnectionArr);
     videoStream.current.getTracks().forEach((track) => {
       peerConnections[peerId].addTrack(track, videoStream.current);
     });
@@ -244,6 +241,14 @@ function Room(props) {
       }
     };
 
+    peerConnection.addEventListener('track', (event) => {
+        console.log(peerId)
+        
+        setPeerVideos((peerVideos) => 
+            [...peerVideos, {id: peerId, stream : event.streams[0]}]
+        );
+    });  
+
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
         socket.emit("candidate", {
@@ -262,14 +267,9 @@ function Room(props) {
     const tempPeerConections = peerConnections;
     tempPeerConections[message.senderId] = peerConnection;
     console.log("recieved a call from: ", peerConnection);
-    console.log(peerConnectionArr);
+
     setPeerConnections(tempPeerConections);
 
-    setPeerConnectionArr([
-        ...peerArrRef.current,
-        peerConnection,
-      ]);
-    console.log(peerConnectionArr);
 
     if (message.offer) {
       peerConnections[message.senderId].setRemoteDescription(
