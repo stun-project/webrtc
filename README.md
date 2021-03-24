@@ -4,7 +4,6 @@ This is a video-chat application made with react, using the webrtc API and a sig
 
 ## Implemented functionality
 - Group videochat
-- Pong... maybe
 
 ## Future work
 - Textchatting in room
