@@ -41,26 +41,13 @@ jobs:
     # Push the Docker image to Google Container Registry
     - name: Publish
       run: |-
-        docker push "sigmundgranaas/stun" 
-    # Deploy the stun server to the CD server
-    - name: Copy files
-      uses: easingthemes/ssh-deploy@v2.1.5
-      env:
-          SSH_PRIVATE_KEY: ${{ secrets.NTNU_SERVER_PRIVATE_KEY }}
-          ARGS: "--delete"
-          SOURCE: "."
-          REMOTE_HOST: ${{ secrets.DOMAIN }}
-          REMOTE_USER: ${{ secrets.NTNU_SERVER_USER }}
-          TARGET: ${{ secrets.REMOTE_TARGET }}
-          EXCLUDE: "/target/, /src/"
-    
-    - name: Run the STUN server
+        docker push "${{ DOCKERHUB_USERNAME }}/webrtc" 
+   
+    - name: Reset the frontend pod
       uses: fifsky/ssh-action@master
       with:
         command: |
-          cd STUN
-          docker-compose down
-          ADDRESS=${{ secrets.NTNU_SEVER_LOCAL_IP }} PORT=${{ secrets.STUN_PORT }} docker-compose up -d
+          kubectl delete pods --selector=app=webrtc
         host: ${{ secrets.DOMAIN }}
         user: ${{ secrets.NTNU_SERVER_USER }}
         key: ${{ secrets.NTNU_SERVER_PRIVATE_KEY }}
