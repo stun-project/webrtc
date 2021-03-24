@@ -202,12 +202,12 @@ function Room(props) {
   const initializePeerConnection = (peerId) => {
     const configuration = {
       iceServers: [
-        { url: "stun:sandring.no:3478" },
-        {
-          url: "turn:sandring.no:3478",
-          credential: "12345",
-          username: "test",
-        },
+        { url: "stun:sandring.no:6000" },
+        // {
+        //   url: "turn:sandring.no:3478",
+        //   credential: "12345",
+        //   username: "test",
+        // },
       ],
     };
 
